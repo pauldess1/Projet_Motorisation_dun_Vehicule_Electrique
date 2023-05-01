@@ -1,0 +1,95 @@
+#include <stdio.h>
+
+int16_t samples[1000];
+
+volatile uint32_t sample_count = 0;
+
+
+
+
+
+
+void sample_isr(void){
+    ADCconv_Start();
+    ADCconv_IsEndConversion(ADCconv_WAIT_FOR_RESULT);
+    
+    int16_t sample = ADCconv_GetResult16(5);
+    samples[sample_count] = sample;
+    sample_count++;
+    if (sample_count >= 1000){
+        sample_count = 0;
+    }
+}
+    
+
+
+
+
+    CySysTickStart();
+    CySysTickSetCallback(0, sample_isr);
+       
+
+
+
+
+
+
+    uint16 cnt = 0;
+    int compteur = 0;
+    float Imachine_max = 0;
+    float Ihacheur = 0;
+    float Ihacheur_max = 0;
+    int Vhacheur = 0;
+
+
+
+
+
+        cnt = (int) Counter_ReadCounter();
+        if(cnt == 10){
+            compteur ++;
+        }
+        if(compteur > 999){
+            compteur = 0;
+        }
+
+
+
+
+
+
+        int16 RESULTAT_ADC_Imachine = ADCconv_GetResult16(5);
+        float TENSION_V_Imachine = ADCconv_CountsTo_Volts(RESULTAT_ADC_Imachine);
+        Imachine = (float) (TENSION_V_Imachine*1.5);
+        Imachine = Imachine - 2.5;
+
+        Imachine_max = Imachine;
+        if(Imachine>Imachine_max){
+            Imachine_max = Imachine;
+        }
+        if(compteur % 5 == 0){
+            Imachine_max = Imachine;
+        }
+
+
+
+
+        int16 RESULTAT_ADC_Ihacheur = ADCconv_GetResult16(4);
+        float TENSION_V_Ihacheur = ADCconv_CountsTo_Volts(RESULTAT_ADC_Ihacheur);
+        Ihacheur = (float) (TENSION_V_Ihacheur*1.5);
+        Ihacheur = Ihacheur - 2.5;
+
+        Ihacheur_max = Ihacheur;
+        if(Ihacheur>Ihacheur_max){
+            Ihacheur_max = Ihacheur;
+        }
+        if(compteur % 5 == 0){
+            Ihacheur_max = Ihacheur;
+        }
+        
+        int16 RESULTAT_ADC_Vhacheur = ADCconv_GetResult16(3);
+        float TENSION_V_Vhacheur = ADCconv_CountsTo_Volts(RESULTAT_ADC_Vhacheur);
+        Vhacheur = (int) (TENSION_V_Vhacheur*148);
+        
+        puissance = (int) Ihacheur_max*Vhacheur;
+
